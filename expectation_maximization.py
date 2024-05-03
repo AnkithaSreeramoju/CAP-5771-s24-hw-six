@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
-from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import confusion_matrix
 
 # ----------------------------------------------------------------------
 
@@ -25,6 +25,33 @@ def compute_SSE(data, labels):
         cluster_center = np.mean(cluster_points, axis=0)
         sse += np.sum((cluster_points - cluster_center) ** 2)
     return sse
+
+
+def compute_confusion_matrix(true_labels: np.ndarray, predicted_labels: np.ndarray) -> np.ndarray:
+    """
+    Compute the confusion matrix for evaluating the performance of a classification algorithm.
+
+    Parameters:
+    - true_labels: numpy array of shape (n,) containing the true labels
+    - predicted_labels: numpy array of shape (n,) containing the predicted labels
+
+    Returns:
+    - confusion_matrix: numpy array of shape (num_classes, num_classes) representing the confusion matrix
+    """
+    unique_true_labels = np.unique(true_labels)
+    num_classes = len(unique_true_labels)
+    confusion_matrix = np.zeros((num_classes, num_classes), dtype=int)
+
+    for true_index in range(num_classes):
+        true_label = unique_true_labels[true_index]
+        true_mask = (true_labels == true_label)
+        for predicted_index in range(num_classes):
+            predicted_label = unique_true_labels[predicted_index]
+            predicted_mask = (predicted_labels == predicted_label)
+            confusion_matrix[true_index, predicted_index] = np.sum(true_mask & predicted_mask)
+
+    return confusion_matrix
+
 
 
 def compute_ARI(confusion_matrix: NDArray[np.int32]):
@@ -187,7 +214,7 @@ def em_algorithm(data: NDArray[np.floating], max_iter: int = 100) -> tuple[
     - means: the means of the two Gaussians (two scalars) as a list
     - covariances: the covariance matrices of the two Gaussians
       (each is a 2x2 symmetric matrix) return the full matrix
-    - log_likelihoods: `max_iter` values of the log_likelihood, including the initial value
+    - log_likelihoods: max_iter values of the log_likelihood, including the initial value
     - predicted_labels
 
     Notes:
@@ -310,7 +337,7 @@ def gaussian_mixture():
         # print("means: ", means)
         # print("weights: ", weights)
         # match the labels
-        confusion_mat = confusion_matrix(label_samples, predicted_labels)
+        confusion_mat = compute_confusion_matrix(label_samples, predicted_labels)
         # answers["confusion_matrix"] = confusion_mat
 
         ARI = adjusted_rand_index(label_samples, predicted_labels)
@@ -332,7 +359,7 @@ def gaussian_mixture():
     answers["plot_original_cluster"] = plot
 
     # --------------------------------------------------------------
-    # Return the `em_algorithm` funtion
+    # Return the em_algorithm funtion
     answers["em_algorithm_function"] = em_algorithm
 
     # --------------------------------------------------------------
